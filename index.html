@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universo Visual - Al Toque</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-matrix: #060507; 
+            --bg-surface: #0b090d; 
+            --bg-glass: rgba(11, 9, 13, 0.6);
+            --neon-amber: #e5b869; 
+            --neon-fire: #4a101a; 
+            --neon-pink: #d48c80; 
+            --text-primary: #f5f4f6; 
+            --text-secondary: #9e9aa4;
+            --font-future: 'Orbitron', sans-serif; 
+            --font-clean: 'Space Grotesk', sans-serif;
+            --glow-glow: 0 0 25px rgba(212, 140, 128, 0.25);
+            --transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body {
+            width: 100%;
+            overflow-x: hidden; /* Blindaje absoluto contra desbordamiento horizontal */
+        }
+
+        body {
+            font-family: var(--font-clean); 
+            background-color: var(--bg-matrix); 
+            color: var(--text-primary);
+            scroll-behavior: smooth;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Lienzo de fondo */
+        #kitchen-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #120911 0%, var(--bg-matrix) 100%);
+        }
+
+        /* Canvas de partículas */
+        #fire-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        h1, h2, h3, h4 { 
+            font-family: var(--font-future); 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            word-wrap: break-word;
+        }
+        
+        .container { 
+            width: 90%; 
+            max-width: 1100px; 
+            margin: 0 auto; 
+            padding: 60px 0; 
+        }
+
+        /* Botón Cyber */
+        .btn-cyber {
+            position: relative; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            padding: 16px 32px; 
+            font-family: var(--font-future); 
+            font-size: 0.8em; 
+            font-weight: 900;
+            text-transform: uppercase; 
+            text-decoration: none; 
+            color: var(--text-primary);
+            background: transparent; 
+            border: 1px solid var(--neon-pink); 
+            cursor: pointer;
+            overflow: hidden;
+            transition: var(--transition); 
+            border-radius: 4px 24px 4px 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            max-width: 100%;
+        }
+        
+        .btn-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-cyber:hover::before { left: 100%; }
+
+        .btn-cyber:hover, .btn-cyber:active { 
+            color: var(--bg-matrix); 
+            background: var(--neon-pink); 
+            box-shadow: var(--glow-glow); 
+            transform: scale(1.02); 
+        }
+
+        #introduction { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            position: relative;
+            padding: 80px 0 40px 0;
+        }
+        
+        .hero-grid { 
+            display: grid; 
+            gap: 40px; 
+            width: 100%; 
+            align-items: center;
+            grid-template-columns: 1fr;
+        }
+        
+        @media (min-width: 992px) { 
+            .hero-grid { grid-template-columns: 7fr 5fr; text-align: left; } 
+        }
+        @media (max-width: 991px) { 
+            .hero-grid { text-align: center; } 
+        }
+
+        .hero-tag { 
+            font-family: var(--font-future); 
+            font-size: 0.7em; 
+            color: var(--neon-pink); 
+            font-weight: 900; 
+            letter-spacing: 3px; 
+            margin-bottom: 16px; 
+            display: block; 
+        }
+        
+        /* Contenedor Máquina de Escribir Seguro */
+        .typing-container {
+            display: inline-block;
+            border-right: 3px solid var(--neon-amber);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: blink 0.75s step-end infinite;
+            max-width: 100%;
+            vertical-align: bottom;
+        }
+
+        /* En móviles se remueve el nowrap dinámicamente si el texto es muy largo */
+        @media (max-width: 576px) {
+            .typing-container {
+                white-space: normal;
+                border-right: none;
+                animation: none;
+            }
+        }
+
+        #introduction h1 { 
+            font-size: clamp(2em, 5vw, 4.5em); 
+            line-height: 1.2; 
+            margin-bottom: 24px; 
+            background: linear-gradient(135deg, var(--text-primary) 20%, var(--neon-pink) 60%, var(--neon-amber)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        
+        #introduction p { 
+            font-size: clamp(1.05em, 1.8vw, 1.25em); 
+            color: var(--text-secondary); 
+            margin-bottom: 35px; 
+            font-weight: 300; 
+            line-height: 1.6;
+        }
+
+        /* Panel holográfico */
+        .holo-panel { 
+            width: 100%; 
+            max-width: 280px; 
+            aspect-ratio: 1; 
+            background: radial-gradient(circle at center, var(--bg-surface) 30%, #000); 
+            border: 1px solid rgba(212, 140, 128, 0.2); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto; 
+            box-shadow: inset 0 0 40px rgba(74, 16, 26, 0.8), var(--glow-glow);
+            position: relative;
+        }
+        
+        .holo-panel::before {
+            content: '';
+            position: absolute;
+            width: 106%; height: 106%;
+            border: 1px dashed rgba(229, 184, 105, 0.3);
+            border-radius: 50%;
+            animation: rotate 25s linear infinite;
+        }
+
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        @keyframes blink { from, to { border-color: transparent } 50% { border-color: var(--neon-amber); } }
+
+        #showcase { 
+            background: rgba(11, 9, 13, 0.8); 
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        #showcase h2 { 
+            font-size: clamp(1.8em, 4vw, 2.8em); 
+            text-align: center; 
+            margin-bottom: 50px; 
+            background: linear-gradient(90deg, var(--neon-pink), var(--neon-amber)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        
+        .branding-grid { display: flex; flex-direction: column; gap: 50px; }
+        
+        /* Ítems del catálogo optimizados */
+        .branding-item { 
+            display: grid; 
+            gap: 30px; 
+            background: var(--bg-glass); 
+            border: 1px solid rgba(212, 140, 128, 0.1); 
+            padding: clamp(16px, 4vw, 45px); 
+            border-radius: 24px; 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            grid-template-columns: 1fr;
+        }
+        
+        @media (min-width: 992px) {
+            .branding-item { grid-template-columns: 5fr 7fr; align-items: center; }
+            .branding-item:nth-child(even) .item-image-wrapper { order: 2; }
+        }
+
+        .item-image-wrapper { 
+            width: 100%; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            background: #000; 
+            aspect-ratio: 4/3; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        
+        .item-image-wrapper img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            display: block;
+            transition: transform 0.5s ease; 
+        }
+        .branding-item:hover .item-image-wrapper img { transform: scale(1.05); }
+
+        .item-details { width: 100%; overflow: hidden; }
+        .item-details h3 { font-size: clamp(1.2em, 3vw, 1.7em); margin-bottom: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;}
+        .recommended-badge { font-size: 0.6em; background: var(--neon-amber); color: #000; padding: 4px 8px; border-radius: 4px; font-family: var(--font-future); letter-spacing: 1px;}
+        .item-description { font-size: clamp(1em, 1.5vw, 1.15em); color: var(--text-secondary); margin-bottom: 25px; font-weight: 300; line-height: 1.6; }
+        
+        .concept-block {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.02);
+            border-left: 3px solid var(--neon-pink);
+            border-radius: 0 12px 12px 0;
+        }
+        .concept-block h4 { font-size: 0.85em; color: var(--neon-pink); margin-bottom: 8px; }
+        .concept-block p { font-size: 0.95em; color: var(--text-secondary); font-weight: 300; line-height: 1.5; }
+        .concept-block strong { color: var(--neon-amber); font-weight: 600;}
+
+        .item-specs ul { 
+            display: flex; gap: 8px; flex-wrap: wrap; list-style: none; margin-bottom: 30px;
+        }
+        .item-specs li { 
+            font-size: 0.75em; background: rgba(255, 255, 255, 0.04); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #decision-zone { padding: 80px 0; position: relative;}
+        .decision-card {
+            background: linear-gradient(135deg, var(--bg-surface), rgba(74, 16, 26, 0.2));
+            border: 1px solid rgba(212, 140, 128, 0.2);
+            padding: clamp(20px, 5vw, 50px); border-radius: 32px; max-width: 850px; margin: 0 auto;
+        }
+
+        .palette-display { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 35px;
+        }
+        @media (max-width: 400px) {
+            .palette-display { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+        }
+        .color-chip { 
+            height: 110px; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; font-size: 0.75em; font-weight: 700; transition: var(--transition);
+        }
+        .color-chip:hover { transform: translateY(-4px); }
+        .color-chip span:first-child { font-family: var(--font-future); margin-bottom: 2px; }
+
+        footer { 
+            padding: 40px 20px; text-align: center; border-top: 1px solid rgba(212, 140, 128, 0.05); background: #040305; font-size: 0.7em; color: var(--text-secondary); font-family: var(--font-future); letter-spacing: 2px; line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="kitchen-background"></canvas>
+    <canvas id="fire-canvas"></canvas>
+
+    <section id="introduction">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <span class="hero-tag" id="dynamic-tag">AL TOQUE // ALTA BRASA</span>
+                    <h1><span class="typing-container" id="typewriter-text">Fuego & Alta Brasa</span></h1>
+                    <p>Dejamos atrás el concepto tradicional de asadero de pollos común. Estructuré tres líneas de identidad para Al Toque que posicionan el negocio en el terreno de los asados premium, la alta cocina urbana y el fast food de autor en Manizales.</p>
+                    <a href="#showcase" class="btn-cyber">Ver Propuestas</a>
+                </div>
+                <div class="holo-panel"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="showcase">
+        <div class="container">
+            <h2>Ecosistemas Visuales</h2>
+            <div class="branding-grid">
+                
+                <article class="branding-item" data-tilt>
+                    <div class="item-image-wrapper"><img src="imagenes/Al-toque-uno.png" alt="Fuego & Legado"></div>
+                    <div class="item-details">
+                        <h3>Línea 1: Fuego Gastronómico <span class="recommended-badge">RECOMENDADA</span></h3>
+                        <p class="item-description">Sofisticación de alta cocina basada en cortes selectos y técnica artesanal de brasa. Estructura madura, limpia y de altísimo valor percibido para romper el mercado local.</p>
+                        
+                        <div class="concept-block">
+                            <h4>El comportamiento cromático y valor premium:</h4>
+                            <p>El <strong>Borgoña</strong> evoca la psicología de los cortes madurados y la cocina de autor a fuego lento. Al cruzarlo con destellos <strong>Champaña</strong>, nos alejamos visualmente de cualquier asadero masivo. El cliente ya no busca precio; busca estatus y una experiencia gastronómica superior.</p>
+                        </div>
+
+                        <div class="item-specs">
+                            <ul>
+                                <li>Isotipo Geométrico de Autor</li>
+                                <li>Tipografía Culinaria Premium</li>
+                                <li>Contraste de Alta Cocina</li>
+                                <li>Top Recordación Digital</li>
+                            </ul>
+                        </div>
+
+                        <a href="https://raw.githubusercontent.com/Akiro69/Imgen-host/main/Al-toque-uno.jpg" download="Al-toque-linea1.jpg" class="btn-cyber btn-download">Descargar Master HD</a>
+                    </div>
+                </article>
+
+                <article class="branding-item" data-tilt>
+                    <div class="item-image-wrapper"><img src="imagenes/Al-toque-dos.png" alt="Vanguardia Gráfica"></div>
+                    <div class="item-details">
+                        <h3>Línea 2: Fast Food de Autor</h3>
+                        <p class="item-description">La irreverencia y velocidad de las comidas rápidas combinadas con el refinamiento de la cocina contemporánea. Hamburguesas, asados y platos urbanos elevados a otro nivel.</p>
+                        
+                        <div class="concept-block">
+                            <h4>Estética sin saturación tradicional:</h4>
+                            <p>Implementamos <strong>Rose Gold</strong> sustentado sobre un fondo <strong>Cyber Matte</strong> profundo. Rompemos la regla obsoleta de los colores rojos y amarillos chillones de las comidas rápidas comunes. Es una propuesta visual gourmet, limpia y altamente fotografiable para redes.</p>
+                        </div>
+
+                        <div class="item-specs">
+                            <ul>
+                                <li>Ilustración Lineal Urbana</li>
+                                <li>Baja Saturación Exclusiva</li>
+                                <li>Corte Editorial Gourmet</li>
+                                <li>Optimizado para Instagram</li>
+                            </ul>
+                        </div>
+
+                        <a href="https://raw.githubusercontent.com/Akiro69/Imgen-host/main/Al-toque-dos.jpg" download="Al-toque-linea2.jpg" class="btn-cyber btn-download">Descargar Master HD</a>
+                    </div>
+                </article>
+
+                <article class="branding-item" data-tilt>
+                    <div class="item-image-wrapper"><img src="imagenes/Al-toque-tres.png" alt="Minimalismo Sutil"></div>
+                    <div class="item-details">
+                        <h3>Línea 3: Brasa Esencial</h3>
+                        <p class="item-description">Reducción absoluta hacia la elegancia. El concepto se centra en la pureza del fuego, el humo y los ingredientes seleccionados, atrayendo a un público ejecutivo y exigente.</p>
+                        
+                        <div class="concept-block">
+                            <h4>Sofisticación minimalista:</h4>
+                            <p>Tonos tierra cruzados con gris ceniza fina y destellos metálicos limpios. Una identidad sobria pensada estratégicamente para destacar en las zonas gastronómicas y comerciales más exclusivas de la ciudad.</p>
+                        </div>
+
+                        <div class="item-specs">
+                            <ul>
+                                <li>Monograma Síntesis</li>
+                                <li>Optimizado para Empaques Premium</li>
+                                <li>Estructura Simétrica Limpia</li>
+                                <li>Alta Identidad Corporativa</li>
+                            </ul>
+                        </div>
+
+                        <a href="https://raw.githubusercontent.com/Akiro69/Imgen-host/main/Al-toque-tres.jpg" download="Al-toque-linea3.jpg" class="btn-cyber btn-download">Descargar Master HD</a>
+                    </div>
+                </article>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="decision-zone">
+        <div class="container">
+            <div class="decision-card">
+                <h2 style="text-align: left; margin-bottom: 20px; font-size: clamp(1.3em, 3vw, 1.8em);">El camino estratégico para la marca:</h2>
+                <p style="color: var(--text-secondary); font-size: 1.05em; line-height: 1.7; margin-bottom: 30px;">
+                    El público local migró a la sofisticación; el consumidor está dispuesto a pagar un ticket más alto si la marca transmite un concept de nivel. <br><br>
+                    <strong>La recomendación definitiva es la Línea 1 (Fuego Gastronómico).</strong> Muta el antiguo concepto de asadero hacia un restaurante de asados y fast food premium. El clima de Manizales conecta de forma natural con la calidez orgánica del Borgoña, mientras que el Champaña consolida el valor de alta cocina en los entornos digitales y físicos. Es la combinación perfecta para el empaque, la fachada y las campañas publicitarias.
+                </p>
+
+                <h4 style="color: var(--neon-amber); margin-bottom: 15px; font-size: 0.8em;">Código de Pigmentos Final:</h4>
+                <div class="palette-display">
+                    <div class="color-chip" style="background: #e5b869; color: #000;"><span>Champaña</span><span>#E5B869</span></div>
+                    <div class="color-chip" style="background: #d48c80; color: #000;"><span>Rose Gold</span><span>#D48C80</span></div>
+                    <div class="color-chip" style="background: #4a101a; color: #fff;"><span>Borgoña</span><span>#4A101A</span></div>
+                    <div class="color-chip" style="background: #9e9aa4; color: #000;"><span>Bone Grey</span><span>#9E9AA4</span></div>
+                    <div class="color-chip" style="background: #0f0d12; color: #fff;"><span>Cyber Matte</span><span>#0F0D12</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer><p>// AL TOQUE &bull; SOLO DELE PLAY &bull; 2026</p></footer>
+
+    <script>
+        /* --- ENGINE 1: MÁQUINA DE ESCRIBIR SEGURO PARA MOBILE --- */
+        const textArray = ["Fuego & Alta Brasa.", "Evolución Gourmet.", "Fast Food de Autor."];
+        let arrayIndex = 0;
+        let charIndex = 0;
+        const typewriterElement = document.getElementById("typewriter-text");
+        const mobileCheck = window.matchMedia("(max-width: 576px)");
+
+        function type() {
+            if (mobileCheck.matches) {
+                typewriterElement.textContent = textArray[0];
+                return;
+            }
+            if (charIndex < textArray[arrayIndex].length) {
+                typewriterElement.textContent += textArray[arrayIndex].charAt(charIndex);
+                charIndex++;
+                setTimeout(type, 100);
+            } else {
+                setTimeout(erase, 2500);
+            }
+        }
+
+        function erase() {
+            if (charIndex > 0) {
+                typewriterElement.textContent = textArray[arrayIndex].substring(0, charIndex - 1);
+                charIndex--;
+                setTimeout(erase, 50);
+            } else {
+                arrayIndex = (arrayIndex + 1) % textArray.length;
+                setTimeout(type, 500);
+            }
+        }
+        document.addEventListener("DOMContentLoaded", () => setTimeout(type, 1000));
+
+
+        /* --- ENGINE 2: FONDO DE ALTA COCINA --- */
+        const bgCanvas = document.getElementById('kitchen-background');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticles = [];
+
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBgCanvas);
+        resizeBgCanvas();
+
+        class KitchenSmoke {
+            constructor() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = bgCanvas.height + Math.random() * 100;
+                this.size = Math.random() * 40 + 20;
+                this.speedY = Math.random() * -0.6 - 0.2;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.alpha = Math.random() * 0.15 + 0.05;
+                this.color = Math.random() > 0.5 ? 74 : 18;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+                if (this.y < -50) {
+                    this.y = bgCanvas.height + 50;
+                    this.x = Math.random() * bgCanvas.width;
+                }
+            }
+            draw() {
+                bgCtx.save();
+                bgCtx.globalAlpha = this.alpha;
+                let gradient = bgCtx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                if(this.color === 74) {
+                    gradient.addColorStop(0, 'rgba(74, 16, 26, 0.3)');
+                } else {
+                    gradient.addColorStop(0, 'rgba(229, 184, 105, 0.15)');
+                }
+                gradient.addColorStop(1, 'transparent');
+                bgCtx.fillStyle = gradient;
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                bgCtx.fill();
+                bgCtx.restore();
+            }
+        }
+
+        for (let i = 0; i < 15; i++) { bgParticles.push(new KitchenSmoke()); }
+
+        function animateBackground() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgParticles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateBackground);
+        }
+        animateBackground();
+
+
+        /* --- ENGINE 3: PARTICLES CURSOR (MÓVILES AMIGABLE) --- */
+        const canvas = document.getElementById('fire-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const handleMove = (e) => {
+            let pointerX = e.clientX || (e.touches && e.touches[0].clientX);
+            let pointerY = e.clientY || (e.touches && e.touches[0].clientY);
+            
+            if (pointerX && pointerY) {
+                let limit = isMobile ? 1 : 2; 
+                for (let i = 0; i < limit; i++) {
+                    particles.push(new FireParticle(pointerX, pointerY));
+                }
+            }
+        };
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove, { passive: true });
+
+        class FireParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * (isMobile ? 1.5 : 3) + 1;
+                this.speedX = Math.random() * 1.2 - 0.6;
+                this.speedY = Math.random() * -1.8 - 0.4;
+                this.color = Math.random() > 0.4 ? '#d48c80' : '#e5b869';
+                this.alpha = 1;
+                this.decay = Math.random() * 0.025 + 0.02;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                if(!isMobile) {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.color;
+                }
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+
+        /* --- ENGINE 4: TILT 3D (SOLO DESKTOP) --- */
+        const cards = document.querySelectorAll('[data-tilt]');
+        if (!isMobile) {
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const xc = rect.width / 2;
+                    const yc = rect.height / 2;
+                    const angleX = (yc - y) / 30; 
+                    const angleY = (x - xc) / 30;
+                    card.style.transform = `rotateY(${angleY}deg) rotateX(${angleX}deg) translateY(-3px)`;
+                    card.style.boxShadow = `0 20px 40px rgba(74, 16, 26, 0.25)`;
+                });
+                card.style.transition = "transform 0.1s ease";
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `rotateY(0deg) rotateX(0deg) translateY(0px)`;
+                    card.style.boxShadow = 'none';
+                });
+            });
+        }
+
+        /* --- ENGINE 5: ENFORCER DE DESCARGA BINARIA --- */
+        document.querySelectorAll('.btn-download').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                const filename = this.getAttribute('download') || 'imagen.jpg';
+                
+                fetch(url)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = blobUrl;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(blobUrl);
+                        document.body.removeChild(a);
+                    })
+                    .catch(() => {
+                        // En caso de bloqueo por CORS estricto en local, abre de respaldo en pestaña nueva sin romper la app
+                        window.open(url, '_blank');
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
